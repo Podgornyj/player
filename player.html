@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Player</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+
+
+    <style type="text/css">
+        .main {
+            margin: auto;
+            width: 500px;
+        }
+        
+        progress {
+            display: block;
+            margin: 5px 0 10px;
+            width: 100%;
+        }
+        
+        ul {
+            list-style: none;
+            margin: 20px 0;
+            padding: 0;
+        }
+        
+        .time,
+        .current-volume {
+            font-size: 13px;
+        }
+        
+        progress.volume {
+            width: 50%;
+        }
+        
+        .equalizeControls input {
+            transform: rotate(-90deg);
+            position: relative;
+            display: inline-block;
+            width: 100px;
+            margin: 25px -60px 40px 0;
+        }
+       
+    </style>
+</head>
+
+<body>
+
+    <div class="main">
+
+        <h3 class="current-song">
+        Patricia Touma - Riding On The Bus
+    </h3>
+
+        <hr>
+
+        <div class="controls">
+            <progress max="0" value="0"></progress>
+
+            <button class="play btn">play/pause</button>
+
+            <span class="time">0:00 из 0:00</span>
+
+            <button class="prev btn">prev</button>
+            <button class="back btn">
+                <<</button>
+                    <button class="forward btn"> >></button>
+                    <button class="next btn">next</button>
+
+        </div>
+
+        <hr>
+
+        <div class="volume-controls">
+            <progress class="volume" max="100" value="100"></progress>
+
+            <button class="volume-up btn btn-xs">volume up</button>
+            <button class="volume-down btn btn-xs">volume down</button>
+
+            <span class="current-volume">100%</span>
+        </div>
+
+        <hr>
+        <div class="equalizeControls">
+            <input min="-25" max="25" step="0.1" value="0" type="range">
+            <input min="-25" max="25" step="0.1" value="0" type="range">
+            <input min="-25" max="25" step="0.1" value="0" type="range">
+            <input min="-25" max="25" step="0.1" value="0" type="range">
+            <input min="-25" max="25" step="0.1" value="0" type="range">
+            <input min="-25" max="25" step="0.1" value="0" type="range">
+            <input min="-25" max="25" step="0.1" value="0" type="range">
+            <input min="-25" max="25" step="0.1" value="0" type="range">
+            <input min="-25" max="25" step="0.1" value="0" type="range">
+            <input min="-25" max="25" step="0.1" value="0" type="range">
+        </div>
+        <div class='grafika'>
+            <canvas id="canvas" width="500" height="200" style="display: block;"></canvas>
+        </div>
+
+        <audio src="mp3s/PatriciaTouma_RidingOnTheBus.mp3"></audio>
+        <!--<audio src="mp3s/PatriciaTouma_TheFrostIsOnThePumpkin.mp3" controls="true"></audio>-->
+        <!--<audio src="mp3s/PatriciaTouma_TheMerryGoRound.mp3" controls="true"></audio>-->
+
+
+
+
+        <script type="text/javascript" src="main.js"></script>
+        <script type="text/javascript" src="equalize.js"></script>
+        <script type="text/javascript">
+           
+
+            var audio = document.querySelector('audio')
+            var playList;
+            var player = new Player();
+            player.dragProgress()
+
+            window.addEventListener('load', function(e) {
+                playList = document.querySelectorAll('a')
+            }, false)
+
+            audio.addEventListener('timeupdate', function(event) {
+                if (event.target.duration) {
+                    player.timeProgressSong(event.target)
+                    player.progressSong(event.target)
+                }
+            }, false)
+
+            audio.addEventListener('volumechange', function(event) {
+                player.volumeProgress(event.target)
+                player.volumeProcent(event.target)
+
+            }, false)
+
+            window.addEventListener('storage', function(event) {
+                if (event.key === 'play') {
+                    player.pause()
+                }
+            });
+
+            document.querySelector('body').addEventListener('click', function(event) {
+
+                if (event.target.tagName === 'PROGRESS') {
+                    if (event.target.className === 'volume') {
+                        audio.volume = ((100 * event.offsetX) / event.target.offsetWidth) / 100
+                    } else {
+                        audio.currentTime = (audio.duration * event.offsetX) / event.target.offsetWidth
+                    }
+                }
+
+                if (event.target.className === 'next btn') {
+                    player.scan(1)
+                    player.title()
+                } else if (event.target.className === 'prev btn') {
+                    player.scan(-1)
+                    player.title()
+                }
+                if (event.target.className === 'forward btn') {
+                    player.forvardClick()
+                } else if (event.target.className === 'back btn') {
+                    player.nextClick()
+                }
+                if (event.target.className.indexOf('volume-up') !== -1 && audio.volume < 1) {
+                    audio.volume = (audio.volume + 0.01).toFixed(2)
+                } else if (event.target.className.indexOf('volume-down') !== -1 && audio.volume > 0) {
+                    audio.volume = (audio.volume - 0.01).toFixed(2)
+                }
+                if (event.target.tagName === 'A') {
+                    event.preventDefault()
+                    audio.setAttribute('src', 'mp3s/' + event.target.dataset.file)
+                    player.play()
+                }
+                if (event.target.className === 'play btn' && player.statusPlay()) {
+                    player.play()
+                } else if (event.target.className === 'play btn' && !player.statusPlay()) {
+                    player.pause()
+                }
+            }, false)
+        </script>
+
+
+        <ul class="playlist">
+            <li><a href="#" data-file="PatriciaTouma_RidingOnTheBus.mp3">Patricia Touma - Riding On The Bus</a></li>
+            <li><a href="#" data-file="PatriciaTouma_TheFrostIsOnThePumpkin.mp3">Patricia Touma - The Frost Is On The
+            Pumpkin</a></li>
+            <li><a href="#" data-file="PatriciaTouma_TheMerryGoRound.mp3">Patricia Touma - The Merry Go Round</a></li>
+            <li><a href="#" data-file="Nirvana_Smells_like_teen_spirit.mp3">Nirvana - Smells like teen spirit</a></li>
+            <li><a href="#" data-file="Korn_Blind.mp3">Korn - Blind</a></li>
+        </ul>
+
+        <hr>
+
+
+    </div>
+</body>
+
+</html>
